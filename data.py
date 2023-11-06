@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 #Import datasets
 base_path = "/Users/luorui/Desktop/UCL/COMP0035 Software Engineering/Coursework/"
@@ -42,6 +43,50 @@ unemployment_df_filtered = unemployment_df_filtered.dropna()
 
 # Aggregate housing data to get the average price for each quarter
 housing_df_quarterly = housing_df.resample('Q', on=('Month', 'Unnamed: 0_level_1')).mean()
+
+# Identify outliers for Housing Prices in London
+Q1_housing = housing_df_quarterly[('London', 'Value')].quantile(0.25)
+Q3_housing = housing_df_quarterly[('London', 'Value')].quantile(0.75)
+IQR_housing = Q3_housing - Q1_housing
+
+housing_outliers = housing_df_quarterly[
+    (housing_df_quarterly[('London', 'Value')] < (Q1_housing - 1.5 * IQR_housing)) |
+    (housing_df_quarterly[('London', 'Value')] > (Q3_housing + 1.5 * IQR_housing))
+]
+
+# Identify outliers for Unemployment Rate in London
+Q1_unemployment = unemployment_df_filtered['London'].quantile(0.25)
+Q3_unemployment = unemployment_df_filtered['London'].quantile(0.75)
+IQR_unemployment = Q3_unemployment - Q1_unemployment
+
+unemployment_outliers = unemployment_df_filtered[
+    (unemployment_df_filtered['London'] < (Q1_unemployment - 1.5 * IQR_unemployment)) |
+    (unemployment_df_filtered['London'] > (Q3_unemployment + 1.5 * IQR_unemployment))
+]
+
+print("Outliers for Housing Prices in London:")
+print(housing_outliers)
+
+print("\nOutliers for Unemployment Rate in London:")
+print(unemployment_outliers)
+
+
+# Box-plot for Housing Prices in London
+plt.figure(figsize=(14, 6))
+plt.subplot(1, 2, 1)
+sns.boxplot(y=housing_df_quarterly[('London', 'Value')])
+plt.title('Box plot of Housing Prices in London')
+plt.ylabel('Housing Prices')
+
+# Box-plot for Unemployment Rate in London
+plt.subplot(1, 2, 2)
+sns.boxplot(y=unemployment_df_filtered['London'])
+plt.title('Box plot of Unemployment Rate in London')
+plt.ylabel('Unemployment Rate')
+
+plt.tight_layout()
+plt.show()
+
 
 # Visualization for Housing Prices and Annual Growth Rate in London
 fig, ax1 = plt.subplots(figsize=(14, 7))
