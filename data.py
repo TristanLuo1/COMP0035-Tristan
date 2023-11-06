@@ -1,12 +1,10 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Load the datasets
+#Import datasets
 base_path = "/Users/luorui/Desktop/UCL/COMP0035 Software Engineering/Coursework/"
-# Assuming the base path is already defined as base_path
 file_path = base_path + "dataset.xlsx"
 
-# Reading the housing data from its sheet
 housing_df = pd.read_excel(file_path, sheet_name="housing", skiprows=6, header=[0,1])
 
 # Reading the unemployment data from its sheet
@@ -104,4 +102,4 @@ housing_df_quarterly.columns = ['_'.join(col).strip() for col in housing_df_quar
 with pd.ExcelWriter(file_path) as writer:
     housing_df_quarterly.to_excel(writer, sheet_name='Housing', index=False)
     unemployment_df_filtered.to_excel(writer, sheet_name='Unemployment', index=False)
-##
+
