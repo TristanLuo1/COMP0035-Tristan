@@ -7,12 +7,10 @@ base_path = "/Users/luorui/Desktop/UCL/COMP0035 Software Engineering/Coursework/
 file_path = base_path + "dataset.xlsx"
 
 # Read the Excel file, specifying the sheet name and the row to skip
-# Adjust 'skiprows' if your dataset's header starts at a different row
+
 housing_df = pd.read_excel(file_path, sheet_name="housing", skiprows=7)
 
 # Rename columns based on the structure we identified
-# This step assumes the first column is 'Month' and follows with the specific headers as per your data
-# Update column names as per the actual names in your dataset
 housing_df.columns = ['Month', 'London Value', 'London Annual growth', 'UK Value', 'UK Annual growth']
 
 # Convert the 'Month' column to datetime format
