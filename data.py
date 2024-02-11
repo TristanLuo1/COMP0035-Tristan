@@ -26,6 +26,10 @@ housing_df_quarterly = housing_df.resample('Q').mean()
 # Generate a 'Quarter' column to explicitly indicate the quarter for each row
 housing_df_quarterly['Quarter'] = housing_df_quarterly.index.to_period('Q')
 
+# Assuming 'Quarter' is the name of the column you want to move to the front
+cols = ['Quarter'] + [col for col in housing_df_quarterly.columns if col != 'Quarter']
+housing_df_quarterly = housing_df_quarterly[cols]
+
 # Reading the unemployment data from its sheet, assuming no adjustments needed here
 unemployment_df = pd.read_excel(file_path, sheet_name="unemployment", skiprows=6)
 
