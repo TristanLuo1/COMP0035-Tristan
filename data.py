@@ -2,13 +2,33 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-#Import datasets
+# Import datasets
 base_path = "/Users/luorui/Desktop/UCL/COMP0035 Software Engineering/Coursework/"
 file_path = base_path + "dataset.xlsx"
 
-housing_df = pd.read_excel(file_path, sheet_name="housing", skiprows=6, header=[0,1])
+# Read the Excel file, specifying the sheet name and the row to skip
+# Adjust 'skiprows' if your dataset's header starts at a different row
+housing_df = pd.read_excel(file_path, sheet_name="housing", skiprows=7)
 
-# Reading the unemployment data from its sheet
+# Rename columns based on the structure we identified
+# This step assumes the first column is 'Month' and follows with the specific headers as per your data
+# Update column names as per the actual names in your dataset
+housing_df.columns = ['Month', 'London Value', 'London Annual growth', 'UK Value', 'UK Annual growth']
+
+# Convert the 'Month' column to datetime format
+housing_df['Month'] = pd.to_datetime(housing_df['Month'], errors='coerce')
+
+
+# Set the 'Month' column as the index for the DataFrame
+housing_df.set_index('Month', inplace=True)
+
+# Aggregate data by quarters and compute the mean for each quarter
+housing_df_quarterly = housing_df.resample('Q').mean()
+
+# Generate a 'Quarter' column to explicitly indicate the quarter for each row
+housing_df_quarterly['Quarter'] = housing_df_quarterly.index.to_period('Q')
+
+# Reading the unemployment data from its sheet, assuming no adjustments needed here
 unemployment_df = pd.read_excel(file_path, sheet_name="unemployment", skiprows=6)
 
 # Initial understanding of the datasets
@@ -41,17 +61,14 @@ unemployment_df_filtered = unemployment_df[(unemployment_df["Quarter"] >= "1995-
 # Drop rows with missing data
 unemployment_df_filtered = unemployment_df_filtered.dropna()
 
-# Aggregate housing data to get the average price for each quarter
-housing_df_quarterly = housing_df.resample('Q', on=('Month', 'Unnamed: 0_level_1')).mean()
-
 # Identify outliers for Housing Prices in London
-Q1_housing = housing_df_quarterly[('London', 'Value')].quantile(0.25)
-Q3_housing = housing_df_quarterly[('London', 'Value')].quantile(0.75)
+Q1_housing = housing_df_quarterly['London Value'].quantile(0.25)
+Q3_housing = housing_df_quarterly['London Value'].quantile(0.75)
 IQR_housing = Q3_housing - Q1_housing
 
 housing_outliers = housing_df_quarterly[
-    (housing_df_quarterly[('London', 'Value')] < (Q1_housing - 1.5 * IQR_housing)) |
-    (housing_df_quarterly[('London', 'Value')] > (Q3_housing + 1.5 * IQR_housing))
+    (housing_df_quarterly['London Value'] < (Q1_housing - 1.5 * IQR_housing)) |
+    (housing_df_quarterly['London Value'] > (Q3_housing + 1.5 * IQR_housing))
 ]
 
 # Identify outliers for Unemployment Rate in London
@@ -74,7 +91,7 @@ print(unemployment_outliers)
 # Box-plot for Housing Prices in London
 plt.figure(figsize=(14, 6))
 plt.subplot(1, 2, 1)
-sns.boxplot(y=housing_df_quarterly[('London', 'Value')])
+sns.boxplot(y=housing_df_quarterly['London Value'])
 plt.title('Box plot of Housing Prices in London')
 plt.ylabel('Housing Prices')
 
@@ -90,12 +107,12 @@ plt.show()
 
 # Visualization for Housing Prices and Annual Growth Rate in London
 fig, ax1 = plt.subplots(figsize=(14, 7))
-ax1.plot(housing_df_quarterly.index, housing_df_quarterly[('London', 'Value')], color="b", label="Housing Prices (London)")
+ax1.plot(housing_df_quarterly.index, housing_df_quarterly['London Value'], color="b", label="Housing Prices (London)")
 ax1.set_xlabel('Quarter')
 ax1.set_ylabel('Housing Prices', color="b")
 ax1.tick_params(axis='y', labelcolor="b")
 ax2 = ax1.twinx()
-ax2.plot(housing_df_quarterly.index, housing_df_quarterly[('London', 'Annual growth')], color="g", linestyle='--', label="Annual Growth Rate (London)")
+ax2.plot(housing_df_quarterly.index, housing_df_quarterly['London Annual growth'], color="g", linestyle='--', label="Annual Growth Rate (London)")
 ax2.set_ylabel('Growth Rate (%)', color="g")
 ax2.tick_params(axis='y', labelcolor="g")
 plt.title("London's Housing Prices and Annual Growth Rate (1995-2023)")
@@ -113,14 +130,14 @@ plt.show()
 # Visualization for Housing Prices, Annual Growth Rate in London, and Unemployment Rate
 
 fig, ax1 = plt.subplots(figsize=(14, 8))
-ax1.plot(housing_df_quarterly.index, housing_df_quarterly[('London', 'Value')], color="b", label="Housing Prices (London)")
+ax1.plot(housing_df_quarterly.index, housing_df_quarterly['London Value'], color="b", label="Housing Prices (London)")
 ax1.set_xlabel('Quarter')
 ax1.set_ylabel('Housing Prices', color="b")
 ax1.tick_params(axis='y', labelcolor="b")
 ax1.legend(loc="upper left")
 
 ax2 = ax1.twinx()
-ax2.plot(housing_df_quarterly.index, housing_df_quarterly[('London', 'Annual growth')], color="g", linestyle='--', label="Annual Growth Rate (London)")
+ax2.plot(housing_df_quarterly.index, housing_df_quarterly['London Annual growth'], color="g", linestyle='--', label="Annual Growth Rate (London)")
 ax2.set_ylabel('Growth Rate (%)', color="g")
 ax2.tick_params(axis='y', labelcolor="g")
 ax2.legend(loc="upper right")
@@ -139,9 +156,6 @@ plt.show()
 
 #Saving the prepared datasets
 file_path = base_path + "dataset_prepared.xlsx"
-
-# Flatten the MultiIndex columns
-housing_df_quarterly.columns = ['_'.join(col).strip() for col in housing_df_quarterly.columns.values]
 
 # Save the data
 with pd.ExcelWriter(file_path) as writer:
